@@ -7,46 +7,46 @@ app.use(express.json());
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-// Fungsi panggil DeepSeek
-async function callDeepSeek(messages) {
-    const response = await axios.post(
-        'https://api.deepseek.com/v1/chat/completions',
-        {
-            model: "deepseek-chat",
-            messages: messages,
-            max_tokens: 200
-        },
-        {
-            headers: {
-                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-                'Content-Type': 'application/json'
-            }
-        }
-    );
-    return response.data.choices[0].message.content;
-}
+// Ganti dengan username GitHub Anda
+const GITHUB_USER = 'username_anda';
+const GITHUB_REPO = 'trading-logs'; // repositori untuk menyimpan log
 
 app.post('/webhook', async (req, res) => {
     try {
         const signal = req.body;
         console.log("Signal diterima:", signal);
 
-        // Analisis dengan DeepSeek
-        const analysis = await callDeepSeek([
-            { role: "system", content: "Kamu adalah analis trading. Analisis sinyal berikut dan berikan rekomendasi singkat." },
-            { role: "user", content: JSON.stringify(signal) }
-        ]);
+        // Panggil DeepSeek API
+        const aiResponse = await axios.post(
+            'https://api.deepseek.com/v1/chat/completions',
+            {
+                model: "deepseek-chat",
+                messages: [
+                    { role: "system", content: "Kamu adalah analis trading. Analisis sinyal berikut dan berikan rekomendasi singkat dalam bahasa Indonesia." },
+                    { role: "user", content: JSON.stringify(signal) }
+                ],
+                max_tokens: 200
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${process.env.DEEPSEEK_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
 
+        const analysis = aiResponse.data.choices[0].message.content;
         console.log("Analisis AI:", analysis);
 
-        // Simpan ke GitHub
+        // Simpan ke GitHub sebagai Issue
         await octokit.issues.create({
-            owner: 'NAMA_PENGGUNA_GITHUB_ANDA',
-            repo: 'trading-logs',
-            title: `Signal signal.symbol−{signal.symbol} -signal.symbol−{signal.action}`,
-            body: `**Data Sinyal:**\nJSON.stringify(signal,null,2)\n\n∗∗AnalisisAI(DeepSeek):∗∗\n{JSON.stringify(signal, null, 2)}\n\n**Analisis AI (DeepSeek):**\nJSON.stringify(signal,null,2)\n\n∗∗AnalisisAI(DeepSeek):∗∗\n{analysis}`
+            owner: GITHUB_USER,
+            repo: GITHUB_REPO,
+            title: `Signal signal.symbol∣∣′Unknown′−{signal.symbol || 'Unknown'} -signal.symbol∣∣′Unknown′−{signal.action || 'Unknown'}`,
+            body: `**Data Sinyal:**\nJSON.stringify(signal,null,2)\n\n∗∗AnalisisAI:∗∗\n{JSON.stringify(signal, null, 2)}\n\n**Analisis AI:**\nJSON.stringify(signal,null,2)\n\n∗∗AnalisisAI:∗∗\n{analysis}`
         });
 
+        console.log("Issue GitHub berhasil dibuat");
         res.status(200).send("OK");
     } catch (error) {
         console.error("Error:", error);
@@ -59,4 +59,6 @@ app.get('/', (req, res) => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server berjalan di port ${port}`));
+app.listen(port, () => {
+    console.log(`Server berjalan di port ${port}`);
+});
