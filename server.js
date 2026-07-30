@@ -5,11 +5,13 @@ const { Octokit } = require('@octokit/rest');
 const app = express();
 app.use(express.json());
 
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
+});
 
 // Ganti dengan username GitHub Anda
-const GITHUB_USER = 'username_anda';
-const GITHUB_REPO = 'trading-logs'; // repositori untuk menyimpan log
+const GITHUB_USER = 'NandangGaming';
+const GITHUB_REPO = 'trading-logs';
 
 app.post('/webhook', async (req, res) => {
     try {
@@ -22,15 +24,21 @@ app.post('/webhook', async (req, res) => {
             {
                 model: "deepseek-chat",
                 messages: [
-                    { role: "system", content: "Kamu adalah analis trading. Analisis sinyal berikut dan berikan rekomendasi singkat dalam bahasa Indonesia." },
-                    { role: "user", content: JSON.stringify(signal) }
+                    {
+                        role: "system",
+                        content: "Kamu adalah analis trading. Analisis sinyal berikut dan berikan rekomendasi singkat dalam bahasa Indonesia."
+                    },
+                    {
+                        role: "user",
+                        content: JSON.stringify(signal)
+                    }
                 ],
                 max_tokens: 200
             },
             {
                 headers: {
-                    'Authorization': `Bearer ${process.env.DEEPSEEK_KEY}`,
-                    'Content-Type': 'application/json'
+                    Authorization: `Bearer ${process.env.DEEPSEEK_KEY}`,
+                    "Content-Type": "application/json"
                 }
             }
         );
@@ -54,12 +62,14 @@ ${JSON.stringify(signal, null, 2)}
 
 ${analysis}
 `
+        });
 
         console.log("Issue GitHub berhasil dibuat");
         res.status(200).send("OK");
+
     } catch (error) {
-        console.error("Error:", error);
-        res.status(500).send("Error: " + error.message);
+        console.error(error.response?.data || error.message);
+        res.status(500).send(error.response?.data || error.message);
     }
 });
 
@@ -68,6 +78,7 @@ app.get('/', (req, res) => {
 });
 
 const port = process.env.PORT || 3000;
+
 app.listen(port, () => {
     console.log(`Server berjalan di port ${port}`);
 });
