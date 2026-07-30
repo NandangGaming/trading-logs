@@ -42,9 +42,18 @@ app.post('/webhook', async (req, res) => {
         await octokit.issues.create({
             owner: GITHUB_USER,
             repo: GITHUB_REPO,
-            title: `Signal signal.symbol∣∣′Unknown′−{signal.symbol || 'Unknown'} -signal.symbol∣∣′Unknown′−{signal.action || 'Unknown'}`,
-            body: `**Data Sinyal:**\nJSON.stringify(signal,null,2)\n\n∗∗AnalisisAI:∗∗\n{JSON.stringify(signal, null, 2)}\n\n**Analisis AI:**\nJSON.stringify(signal,null,2)\n\n∗∗AnalisisAI:∗∗\n{analysis}`
-        });
+            title: `Signal ${signal.symbol || 'Unknown'} - ${signal.action || 'Unknown'}`,
+            body: `
+## Data Sinyal
+
+\`\`\`json
+${JSON.stringify(signal, null, 2)}
+\`\`\`
+
+## Analisis AI
+
+${analysis}
+`
 
         console.log("Issue GitHub berhasil dibuat");
         res.status(200).send("OK");
